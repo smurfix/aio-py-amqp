@@ -18,6 +18,10 @@ from __future__ import absolute_import
 
 from collections import deque, defaultdict
 from functools import wraps
+try:
+    import asyncio
+except ImportError:
+    import trollius as asyncio
 
 from .exceptions import AMQPNotImplementedError, RecoverableConnectionError
 from .method_framing import frame_writer
@@ -41,6 +45,8 @@ class AsyncHelper(type):
                         p = fn(self,*a,**k)
                         if not isinstance(p, promise):
                             return p
+                        loop = asyncio.get_event_loop()
+                        loop.run_until_complete(self)
                         while not p.ready and not p.failed:
                             self.connection.drain_events()
                         if p.failed:

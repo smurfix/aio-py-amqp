@@ -189,7 +189,7 @@ class Connection(AbstractChannel):
         self.on_tune_ok = ensure_promise(on_tune_ok)
         self.make_lock = lock_factory or FakeLock
 
-        self._handshake_complete = False
+        self._handshake_complete = asyncio.Future()
 
         self.channels = {}
         # The connection object itself is treated as channel 0
@@ -218,18 +218,10 @@ class Connection(AbstractChannel):
         self.mechanisms = []
         self.locales = []
 
-        # Let the transport.py module setup the actual
-        # socket connection to the broker.
-        #
-        self.transport = self.Transport(
-            host, connect_timeout, ssl, read_timeout, write_timeout,
-            socket_settings=socket_settings,
-        )
         self.on_inbound_frame = frame_handler(self, self.on_inbound_method)
         self._frame_writer = frame_writer(self)
 
         self.connect_timeout = connect_timeout
-        self.connect()
 
     def then(self, on_success, on_error=None):
         return self.on_open.then(on_success, on_error)
@@ -246,7 +238,22 @@ class Connection(AbstractChannel):
             spec.Connection.CloseOk: self._on_close_ok,
         })
 
-    def connect(self, callback=None):
+    @asyncio.coroutine
+    def connect_async(self):
+        # Let the transport.py module setup the actual
+        # socket connection to the broker.
+        #
+        loop = asyncio.get_event_loop()
+        transport = self.Transport(
+            host, ssl, read_timeout, write_timeout,
+            socket_settings=socket_settings,
+        )
+        if self.connect_timeout:
+        else:
+            w = transport
+        sleep = asyncio.sleep(
+        loop.run_until_complete(self._handshake_complete)
+
         while not self._handshake_complete:
             self.drain_events(timeout=self.connect_timeout)
 
@@ -311,7 +318,7 @@ class Connection(AbstractChannel):
         )
 
     def _on_open_ok(self):
-        self._handshake_complete = True
+        self._handshake_complete.set_result(True)
         self.on_open(self)
 
     def FIXME(self, *args, **kwargs):
