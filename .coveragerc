@@ -9,7 +9,6 @@ omit =
     */python?.?/*
     */site-packages/*
     */pypy/*
-    *amqp/five.py
 exclude_lines =
     pragma: no cover
 

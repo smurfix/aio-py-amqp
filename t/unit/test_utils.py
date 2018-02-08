@@ -2,7 +2,6 @@ from __future__ import absolute_import, unicode_literals
 
 from case import Mock, patch
 
-from amqp.five import text_t
 from amqp.utils import (NullHandler, bytes_to_str, coro, get_errno, get_logger,
                         str_to_bytes)
 
@@ -54,7 +53,7 @@ class test_str_to_bytes:
 class test_bytes_to_str:
 
     def test_from_unicode(self):
-        assert isinstance(bytes_to_str('foo'), text_t)
+        assert isinstance(bytes_to_str('foo'), str)
 
     def test_from_bytes(self):
         assert bytes_to_str(b'foo')

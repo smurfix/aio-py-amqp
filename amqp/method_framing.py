@@ -7,7 +7,6 @@ from collections import defaultdict
 from . import spec
 from .basic_message import Message
 from .exceptions import UnexpectedFrame
-from .five import range
 from .platform import pack, pack_into, unpack_from
 from .utils import str_to_bytes
 

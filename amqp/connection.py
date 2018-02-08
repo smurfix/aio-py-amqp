@@ -6,6 +6,8 @@ import logging
 import socket
 import uuid
 import warnings
+import array
+import time
 
 from vine import ensure_promise
 
@@ -16,7 +18,6 @@ from .exceptions import (AMQPDeprecationWarning, ChannelError, ConnectionError,
                          ConnectionForced, RecoverableChannelError,
                          RecoverableConnectionError, ResourceError,
                          error_for_code)
-from .five import array, items, monotonic, range, string, values
 from .method_framing import frame_handler, frame_writer
 from .transport import Transport
 
@@ -255,7 +256,7 @@ class Connection(AbstractChannel):
         self.on_unblocked = on_unblocked
         self.on_open = ensure_promise(on_open)
 
-        self._avail_channel_ids = array('H', range(self.channel_max, 0, -1))
+        self._avail_channel_ids = array.array('H', range(self.channel_max, 0, -1))
 
         # Properties set in the Start method
         self.version_major = 0
@@ -350,7 +351,7 @@ class Connection(AbstractChannel):
         self.version_major = version_major
         self.version_minor = version_minor
         self.server_properties = server_properties
-        if isinstance(mechanisms, string):
+        if isinstance(mechanisms, str):
             mechanisms = mechanisms.encode('utf-8')
         self.mechanisms = mechanisms.split(b' ')
         self.locales = locales.split(' ')
@@ -365,7 +366,7 @@ class Connection(AbstractChannel):
         cap = client_properties.setdefault('capabilities', {})
         cap.update({
             wanted_cap: enable_cap
-            for wanted_cap, enable_cap in items(self.negotiate_capabilities)
+            for wanted_cap, enable_cap in self.negotiate_capabilities.items()
             if scap.get(wanted_cap)
         })
         if not cap:
@@ -445,7 +446,7 @@ class Connection(AbstractChannel):
             if self._transport:
                 self._transport.close()
 
-            temp_list = [x for x in values(self.channels or {})
+            temp_list = [x for x in (self.channels or {}).values()
                          if x is not self]
             for ch in temp_list:
                 ch.collect()
@@ -689,11 +690,11 @@ class Connection(AbstractChannel):
         sent_now = self.bytes_sent
         recv_now = self.bytes_recv
         if self.prev_sent is None or self.prev_sent != sent_now:
-            self.last_heartbeat_sent = monotonic()
+            self.last_heartbeat_sent = time.monotonic()
         if self.prev_recv is None or self.prev_recv != recv_now:
-            self.last_heartbeat_received = monotonic()
+            self.last_heartbeat_received = time.monotonic()
 
-        now = monotonic()
+        now = time.monotonic()
         AMQP_LOGGER.debug(
             'heartbeat_tick : Prev sent/recv: %s/%s, '
             'now - %s/%s, monotonic - %s, '
@@ -714,13 +715,13 @@ class Connection(AbstractChannel):
                 'heartbeat_tick: sending heartbeat for connection %s',
                 self._connection_id)
             self.send_heartbeat()
-            self.last_heartbeat_sent = monotonic()
+            self.last_heartbeat_sent = time.monotonic()
 
         # if we've missed two intervals' heartbeats, fail; this gives the
         # server enough time to send heartbeats a little late
         if (self.last_heartbeat_received and
                 self.last_heartbeat_received + 2 *
-                self.heartbeat < monotonic()):
+                self.heartbeat < time.monotonic()):
             raise ConnectionForced('Too many heartbeats missed')
 
     @property

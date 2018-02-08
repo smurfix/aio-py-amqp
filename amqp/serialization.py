@@ -13,7 +13,6 @@ from decimal import Decimal
 from io import BytesIO
 
 from .exceptions import FrameSyntaxError
-from .five import int_types, items, long_t, string, string_t
 from .platform import pack, unpack_from
 from .spec import Basic
 from .utils import bytes_to_str as pstr_t
@@ -289,14 +288,14 @@ def dumps(format, values):
         elif p == 's':
             val = val or ''
             bitcount = _flushbits(bits, write)
-            if isinstance(val, string):
+            if isinstance(val, str):
                 val = val.encode('utf-8', 'surrogatepass')
             write(pack('B', len(val)))
             write(val)
         elif p == 'S':
             val = val or ''
             bitcount = _flushbits(bits, write)
-            if isinstance(val, string):
+            if isinstance(val, str):
                 val = val.encode('utf-8', 'surrogatepass')
             write(pack('>I', len(val)))
             write(val)
@@ -307,7 +306,7 @@ def dumps(format, values):
             bitcount = _flushbits(bits, write)
             _write_array(val or [], write, bits)
         elif p == 'T':
-            write(pack('>Q', long_t(calendar.timegm(val.utctimetuple()))))
+            write(pack('>Q', int(calendar.timegm(val.utctimetuple()))))
     _flushbits(bits, write)
 
     return out.getvalue()
@@ -316,8 +315,8 @@ def dumps(format, values):
 def _write_table(d, write, bits, pack=pack):
     out = BytesIO()
     twrite = out.write
-    for k, v in items(d):
-        if isinstance(k, string):
+    for k, v in d.items():
+        if isinstance(k, str):
             k = k.encode('utf-8', 'surrogatepass')
         twrite(pack('B', len(k)))
         twrite(k)
@@ -346,12 +345,12 @@ def _write_array(l, write, bits, pack=pack):
 
 
 def _write_item(v, write, bits, pack=pack,
-                string_t=string_t, bytes=bytes, string=string, bool=bool,
-                float=float, int_types=int_types, Decimal=Decimal,
+                bytes=bytes, str=str, bool=bool,
+                float=float, int=int, Decimal=Decimal,
                 datetime=datetime, dict=dict, list=list, tuple=tuple,
                 None_t=None):
-    if isinstance(v, (string_t, bytes)):
-        if isinstance(v, string):
+    if isinstance(v, (str, bytes)):
+        if isinstance(v, str):
             v = v.encode('utf-8', 'surrogatepass')
         write(pack('>cI', b'S', len(v)))
         write(v)
@@ -359,7 +358,7 @@ def _write_item(v, write, bits, pack=pack,
         write(pack('>cB', b't', int(v)))
     elif isinstance(v, float):
         write(pack('>cd', b'd', v))
-    elif isinstance(v, int_types):
+    elif isinstance(v, int):
         if v > 2147483647 or v < -2147483647:
             write(pack('>cq', b'L', v))
         else:
@@ -374,7 +373,7 @@ def _write_item(v, write, bits, pack=pack,
         write(pack('>cBi', b'D', -exponent, v))
     elif isinstance(v, datetime):
         write(
-            pack('>cQ', b'T', long_t(calendar.timegm(v.utctimetuple()))))
+            pack('>cQ', b'T', int(calendar.timegm(v.utctimetuple()))))
     elif isinstance(v, dict):
         write(b'F')
         _write_table(v, write, bits)

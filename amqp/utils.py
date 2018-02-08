@@ -8,8 +8,6 @@ import sys
 from vine import promise  # noqa
 from vine.utils import wraps
 
-from .five import string_t
-
 is_py3k = sys.version_info[0] == 3
 
 try:
@@ -103,7 +101,7 @@ class NullHandler(logging.Handler):
 
 def get_logger(logger):
     """Get logger by name."""
-    if isinstance(logger, string_t):
+    if isinstance(logger, str):
         logger = logging.getLogger(logger)
     if not logger.handlers:
         logger.addHandler(NullHandler())

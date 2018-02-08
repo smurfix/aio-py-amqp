@@ -9,7 +9,6 @@ import ssl
 from contextlib import contextmanager
 
 from .exceptions import UnexpectedFrame
-from .five import items
 from .platform import KNOWN_TCP_OPTS, SOL_TCP, pack, unpack
 from .utils import get_errno, set_cloexec
 
@@ -205,7 +204,7 @@ class _AbstractTransport(object):
         tcp_opts = self._get_tcp_socket_defaults(self.sock)
         if socket_settings:
             tcp_opts.update(socket_settings)
-        for opt, val in items(tcp_opts):
+        for opt, val in tcp_opts.items():
             self.sock.setsockopt(SOL_TCP, opt, val)
 
     def _read(self, n, initial=False):

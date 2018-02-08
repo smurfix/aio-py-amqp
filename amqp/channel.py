@@ -14,7 +14,7 @@ from .abstract_channel import AbstractChannel
 from .exceptions import (ChannelError, ConsumerCancelled,
                          RecoverableChannelError, RecoverableConnectionError,
                          error_for_code)
-from .five import Queue
+from queue import Queue
 from .protocol import queue_declare_ok_t
 
 __all__ = ['Channel']
